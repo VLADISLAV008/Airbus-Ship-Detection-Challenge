@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 from constants import IMG_SHAPE
-from train.loss import IoU_loss
+from train.loss import IoU_loss, dice_loss
 
 
 class UNetModel:
@@ -89,6 +89,6 @@ class UNetModel:
 def create_model():
     model = UNetModel(IMG_SHAPE + (3,)).model
     model.compile(optimizer='adam',
-                  loss=IoU_loss,
+                  loss=dice_loss,
                   metrics=[])
     return model

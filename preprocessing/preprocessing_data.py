@@ -4,7 +4,7 @@ import pandas as pd
 import cv2
 import tensorflow as tf
 
-from constants import IMG_SHAPE, BUFFER_SIZE, BATCH_SIZE
+from constants import IMG_SHAPE, BUFFER_SIZE, BATCH_SIZE, IMAGES_WITHOUT_SHIPS_NUMBER, VALIDATION_LENGTH
 from preprocessing.utils import rle_to_mask
 
 
@@ -44,16 +44,34 @@ def load_train_image(tensor, images_segmentations) -> tuple:
     return input_image, input_mask
 
 
-def prepare_train_batches():
+def prepare_train_and_validation_batches():
     _, images_segmentations = get_train_dataset()
-    images_list = tf.data.Dataset.list_files(f'{os.environ.get("TRAIN_DIR")}*')
+
+    # reduce the number of images without ships
+    images_without_ships = images_segmentations[images_segmentations['EncodedPixels'].isna()]['ImageId'].values
+    images_without_ships = images_without_ships[:IMAGES_WITHOUT_SHIPS_NUMBER]
+    images_with_ships = images_segmentations[images_segmentations['EncodedPixels'].notna()]['ImageId'].values
+    images_list = np.append(images_without_ships, images_with_ships)
+
+    images_list = tf.data.Dataset.list_files([f'{os.environ.get("TRAIN_DIR")}{name}' for name in images_list])
+
     train_images = images_list.map(
         lambda x: tf.py_function(load_train_image, [x, images_segmentations], [tf.float32, tf.float32]),
         num_parallel_calls=tf.data.AUTOTUNE)
+
+    validation_dataset = train_images.take(VALIDATION_LENGTH)
+    train_dataset = train_images.skip(VALIDATION_LENGTH)
+
     train_batches = (
-        train_images
+        train_dataset
             .shuffle(BUFFER_SIZE)
             .repeat()
             .batch(BATCH_SIZE)
             .prefetch(buffer_size=tf.data.AUTOTUNE))
-    return train_batches
+
+    validation_batches = (
+        validation_dataset
+            .shuffle(BUFFER_SIZE)
+            .batch(BATCH_SIZE)
+            .prefetch(buffer_size=tf.data.AUTOTUNE))
+    return train_batches, validation_batches

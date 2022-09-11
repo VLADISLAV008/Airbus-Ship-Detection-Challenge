@@ -32,7 +32,9 @@ Run the train file
 
     python ./train/train.py
 ### How to use a model
-To be done
+The trained model is saved in the checkpoint directory. It will be used to segment new images.
+
+To segment a new image, you need to call the `predict` method (in the `inference/prediction.py` file), passing the loaded trained model and the path to the image.
 
 # 🎯 Solution
 1. Data analysis was carried out ([data-analysis](https://github.com/VLADISLAV008/Airbus-Ship-Detection-Challenge/blob/master/data-analysis.ipynb)).
@@ -45,10 +47,6 @@ The resulting neural network architecture is shown below.
 ![img.png](MyUNetModel.png)
 4. Then we train the instance segmentation model - Deep Watershed Transform , which will separate the ships using the semantic segmentation that the UNet model produces.
 To be done
-
-# Results
-Due to the small amount of RAM on the existing computer, the model was trained for a small number of neural network training iterations (10 epochs were carried out, each of which had 100 iterations for a batch of 32 images).
-As a result, the resulting model incorrectly does the semantic segmentation of images.
 
 # How can we try to improve the model
 1. Pretrain the encoder for classifying ships. And then do not change the encoder weights when training the segmentation model.

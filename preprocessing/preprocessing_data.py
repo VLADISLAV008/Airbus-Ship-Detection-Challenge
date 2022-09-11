@@ -33,14 +33,13 @@ def load_train_image(tensor, images_segmentations) -> tuple:
     input_image = cv2.imread(path)
     input_image = tf.image.resize(input_image, IMG_SHAPE)
     input_image = tf.cast(input_image, tf.float32) / 255.0
-    input_image = np.expand_dims(input_image, axis=0)
 
     encoded_mask = images_segmentations[images_segmentations['ImageId'] == image_id].iloc[0]['EncodedPixels']
-    input_mask = np.zeros((1,) + IMG_SHAPE + (1,))
+    input_mask = np.zeros(IMG_SHAPE + (1,))
     if not pd.isna(encoded_mask):
         input_mask = rle_to_mask(encoded_mask)
         input_mask = cv2.resize(input_mask, IMG_SHAPE, interpolation=cv2.INTER_AREA)
-        input_mask = np.expand_dims(input_mask, axis=(0, 3))
+        input_mask = np.expand_dims(input_mask, axis=2)
 
     return input_image, input_mask
 
@@ -53,7 +52,6 @@ def prepare_train_batches():
         num_parallel_calls=tf.data.AUTOTUNE)
     train_batches = (
         train_images
-            .cache()
             .shuffle(BUFFER_SIZE)
             .repeat()
             .batch(BATCH_SIZE)

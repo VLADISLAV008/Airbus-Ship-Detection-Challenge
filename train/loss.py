@@ -2,7 +2,7 @@ import keras.backend as K
 
 
 def dice_loss(targets, inputs, smooth=1e-6):
-    # flatten label and prediction tensors
+    # flatten label and prediction.py tensors
     inputs = K.flatten(inputs)
     targets = K.flatten(targets)
 
